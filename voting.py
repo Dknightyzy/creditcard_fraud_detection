@@ -79,37 +79,43 @@ if __name__ == '__main__':
 
     '''-----------------------------------------------------------------------'''
     # RandomForest
-    forest = RandomForestClassifier(criterion='entropy', n_estimators=100, random_state=1, n_jobs=-1)
-    forest.fit(X_train_undersample, y_train_undersample)
-    y_pred = forest.predict(X)
-
-    pipe_rf = Pipeline([('clf', RandomForestClassifier(random_state=1))])
-    param_grid = [{'clf__criterion': ['entropy', 'gini'], 'clf__n_estimators': [10, 100, 200]}]
-    gs = GridSearchCV(estimator=pipe_rf, param_grid=param_grid, scoring='roc_auc', cv=10, n_jobs=-1)
-    gs = gs.fit(X_train_undersample, y_train_undersample.values.ravel())
-    print gs.grid_scores_
-    print gs.best_params_
-
-    clf = gs.best_estimator_
-    clf.fit(X_train_undersample, y_train_undersample.values.ravel())
-    # print 'Test accuracy: %.3f' % clf.score(X.values, y.values.ravel())
-    y_pred = clf.predict(X)
-    tools.plot_cm(y, y_pred)
-    plt.show()
+    # forest = RandomForestClassifier(criterion='entropy', n_estimators=100, random_state=1, n_jobs=-1)
+    # forest.fit(X_train_undersample, y_train_undersample)
+    # y_pred = forest.predict(X)
+    #
+    # pipe_rf = Pipeline([('clf', RandomForestClassifier(random_state=1))])
+    # param_grid = [{'clf__criterion': ['entropy', 'gini'], 'clf__n_estimators': [10, 100, 200]}]
+    # gs = GridSearchCV(estimator=pipe_rf, param_grid=param_grid, scoring='roc_auc', cv=10, n_jobs=-1)
+    # gs = gs.fit(X_train_undersample, y_train_undersample.values.ravel())
+    # print gs.grid_scores_
+    # print gs.best_params_
+    #
+    # clf = gs.best_estimator_
+    # clf.fit(X_train_undersample, y_train_undersample.values.ravel())
+    # # print 'Test accuracy: %.3f' % clf.score(X.values, y.values.ravel())
+    # y_pred = clf.predict(X)
+    # tools.plot_cm(y, y_pred)
+    # plt.show()
 
     '''----------------------------------------------------------------------'''
-    # # ensemble learning
-    # clf1 = LogisticRegression(penalty='l1', C=0.01)
+    # ensemble learning
+    clf1 = LogisticRegression(penalty='l1', C=0.01)
     # clf2 = SVC(C=1.0, kernel='rbf', gamma=0.01)
-    # clf3 = RandomForestClassifier(criterion='entropy', n_estimators=200)
-    # mv_clf = VotingClassifier(estimators=[('LR', clf1),
-    #                                       ('SVM', clf2),
-    #                                       ('MV', clf3)], voting='soft')
-    # clf_labels = ['Logistic Regression', 'SVM', 'RandomForest', 'MajorityVoting']
-    # all_clf = [clf1, clf2, clf3, mv_clf]
+    clf3 = RandomForestClassifier(criterion='entropy', n_estimators=200)
+    mv_clf = VotingClassifier(estimators=[('LR', clf1),
+                                          # ('SVM', clf2),
+                                          ('MV', clf3)], voting='soft', n_jobs=-1)
+    clf_labels = ['Logistic Regression', 'RandomForest', 'MajorityVoting']
+    all_clf = [clf1, clf3, mv_clf]
     # for clf, label in zip(all_clf, clf_labels):
-    #     scores = cross_val_score(estimator=clf, X=X_train_undersample, y=y_train_undersample.values.ravel(), cv=5, scoring='roc_auc', n_jobs=-1)
+    #     scores = cross_val_score(estimator=clf, X=X_train_undersample, y=y_train_undersample.values.ravel(), cv=10, scoring='roc_auc', n_jobs=1)
     #     print "Accuracy: %f (+/- %f) [%s]" % (scores.mean(), scores.std(), label)
+
+    mv_clf.fit(X_train_undersample, y_train_undersample.values.ravel())
+    # print 'Test accuracy: %.3f' % clf.score(X.values, y.values.ravel())
+    y_pred = mv_clf.predict(X)
+    tools.plot_cm(y, y_pred)
+    plt.show()
 
     end = time.clock()
     print "耗时：%f s" %(end - start)
